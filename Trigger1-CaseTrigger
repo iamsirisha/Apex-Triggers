@@ -1,0 +1,35 @@
+/*When ever a case is created or updated with origin as email then set status as working and Priority as low*/
+
+Trigger:
+
+trigger CaseTriggerPriorityUpdate on Case (before insert, before update) {
+    if (Trigger.isBefore) {
+        if (Trigger.isInsert) {
+            CaseHandler.onBeforeInsert(Trigger.new);
+        }
+        if (Trigger.isUpdate) {
+            CaseHandler.onBeforeUpdate(Trigger.new, Trigger.oldMap);
+        }
+    }
+}
+HandlerClass:
+public class CaseHandler {
+    public static void onBeforeInsert(List<Case> newCases) {
+        for (Case caseVar : newCases) {
+            if (caseVar.Origin == 'email') {
+                caseVar.Status = 'working';
+                caseVar.Priority = 'low';
+            }
+        }
+    }
+
+    public static void onBeforeUpdate(List<Case> updatedCases, Map<Id, Case> oldMapCases) {
+        for (Case caseVar : updatedCases) {
+            Case oldCase = oldMapCases.get(caseVar.Id);
+            if (caseVar.Origin == 'email' && caseVar.Origin != oldCase.Origin) {
+                caseVar.Status = 'working';
+                caseVar.Priority = 'low';
+            }
+        }
+    }
+}
