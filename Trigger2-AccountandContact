@@ -1,1 +1,30 @@
+?* When Account Phone updated Populate the Account phone as Contact Home Phone and Accounts Old Phone as Contacts Other Phone*/
 
+trigger AccountPhoneUpdateTrigger on Account (after update) {
+    Set<Id> accountIds = new Set<Id>();
+    List<Contact> contactsToUpdate = new List<Contact>();
+    
+    for (Account updatedAccount : Trigger.new) {
+        if (updatedAccount.Phone != null) {
+            accountIds.add(updatedAccount.Id);
+        }
+    }
+    
+    if (!accountIds.isEmpty()) {
+        List<Account> updatedAccounts = [SELECT Id, Phone, (SELECT Id, HomePhone, OtherPhone FROM Contacts) FROM Account WHERE Id IN :accountIds];
+        
+        for (Account updatedAccount : updatedAccounts) {
+            Account oldAccount = Trigger.oldMap.get(updatedAccount.Id);
+            
+            for (Contact contact : updatedAccount.Contacts) {
+                contact.HomePhone = updatedAccount.Phone;
+                contact.OtherPhone = oldAccount.Phone;
+                contactsToUpdate.add(contact);
+            }
+        }
+        
+        if (!contactsToUpdate.isEmpty()) {
+            update contactsToUpdate;
+        }
+    }
+}
