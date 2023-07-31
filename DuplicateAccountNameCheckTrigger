@@ -1,0 +1,28 @@
+trigger DuplicateAccountTrigger on Account (before insert,before update) {
+set<String> acclist=new set<String>();
+if(trigger.isBefore && (trigger.IsInsert ||trigger.IsUpdate)){
+    if(!trigger.new.isEmpty())
+    {
+for(Account acc:trigger.new){
+acclist.add(acc.Name);
+}
+}
+} 
+List<Account> acciteratelist=[select id ,Name from Account where  name in:acclist];
+Map<String,Account> existingAccount =new Map<String,Account>();
+if(!acciteratelist.isEmpty()){
+for(Account acc:acciteratelist)
+{
+    existingAccount.put(acc.name,acc);
+}
+}
+if(!trigger.new.isEmpty()){
+for(Account acc: trigger.new)
+{
+if(existingAccount.containsKey(acc.name))
+{
+    acc.addError('Error !! Account Name already Exists for another Account');
+}
+}
+}
+}
