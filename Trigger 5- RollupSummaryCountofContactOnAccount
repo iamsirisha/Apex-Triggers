@@ -1,0 +1,74 @@
+/*Rollup Summary rigger to Calculate Number of contacts on Account obj when any contact inserted updated deleted undeleted*/
+/*pre requisite Create No_of_Contacts__c on Account Object*/
+
+
+trigger RollupSummaryContactTrigger on Contact (after insert ,after update,after delete,after undelete)
+{
+    //get all accountids
+ set<id> accids =new set<id>();
+    if(trigger.isAfter && (trigger.isInsert ||trigger.IsUndelete))
+    {
+        if(!trigger.new.IsEmpty())
+        {
+        for(Contact con:trigger.new)
+        {
+            if(con.accountid !=null)
+        {
+            accids.add(con.accountid);
+        }
+        }
+    }
+    }
+    if(trigger.isAfter && trigger.isUpdate)
+    {
+        if(!trigger.new.IsEmpty())
+        {
+        for(Contact con: trigger.new)
+        {
+            //check old accountid and present account id are same or not
+            if(con.AccountId != trigger.oldmap.get(con.id).accountId)
+            {
+                //if old accountid is not null
+             if(trigger.oldmap.get(con.id).accountId !=null)
+                {
+             accids.add(trigger.oldmap.get(con.id).accountId);    
+            }
+            
+        //if present accountid is not null
+            if(con.accountId != null)
+            {
+                accids.add(con.accountid);  
+            }
+            }
+        }
+        }
+    }
+        
+        if(trigger.IsAfter && trigger.IsDelete)
+        {
+            if(!trigger.old.IsEmpty())
+            {
+            for(Contact con:trigger.old)
+            {
+                if(con.accountId != null)
+                {
+                   accids.add(con.accountid);   
+                }
+            }
+        }
+        } 
+            List<Account> acclist=[select id,No_of_Contacts__c,(select id from Contacts) from Account where id in:accids];
+            List<Account> acc2update=new list<account>();
+            
+            for(Account acc: acclist)
+            {
+                acc.No_of_Contacts__c = acc.contacts.size();
+                acc2update.add(acc);
+            }
+            if(acc2update.size()> 0)
+            {
+              update acc2update;
+            }
+            
+
+}
