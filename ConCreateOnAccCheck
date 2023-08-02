@@ -1,0 +1,27 @@
+/* Trigger to create a related Contact of Account with same phone as Account's Phone if CustomChecbox  field is created on Account is Checked*/
+/*pre requisite Create ConCreatewithPhone__c Checkbox field on account  */
+
+trigger ConCreateOnAccCheck on Account (after insert,after update) {
+List<Contact> Conlist= new list<contact>();
+if(trigger.isAfter && (trigger.isInsert || trigger.isUpdate))
+{
+    if(!trigger.new.isEmpty())
+    {
+for(Account acc:trigger.new)
+{
+    if(acc.ConCreatewithPhone__c ==true ){
+    Contact con=new Contact();
+    con.accountid=acc.id;
+    con.lastname=acc.name;
+    con.FirstName='test';
+    con.Phone=acc.phone;
+    Conlist.add(con);
+}
+    }
+}
+if(Conlist.size() >0)
+{
+insert Conlist;
+}
+}
+}
