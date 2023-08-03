@@ -1,0 +1,38 @@
+/* Write a trigger on the Account when the Account is updated check all the Opportunities related to the account Update all the Opportunity stage to Closeds lost if an Opportunity Created date is greater than 30 days from today and stage not equal to Closed won */
+trigger OppStageUpdateTrigger on Account (after update) {
+
+    set<id> accids =new set<id>();
+    if(trigger.isAfter &&(trigger.isInsert || trigger.isUpdate))
+    {
+        if(!trigger.new.isEmpty())
+        {
+for(Account acc: trigger.new)
+{ 
+    accids.add(acc.id);
+}
+        }
+
+    }
+if(!accids.isEmpty()){
+    List<Opportunity> opplist=[Select id,Accountid,stagename,Test_Created_Date__c from Opportunity where accountid in:accids];
+    list<opportunity> opplist2udate=new List<Opportunity>();
+    Date day30= date.today()-30;
+    if(!opplist.isEmpty()){
+for(Opportunity opp: opplist)
+{
+if(opp.StageName!= 'Closed Won' && opp.Test_Created_Date__c < day30)
+{
+opp.StageName='closed Lost';
+opp.CloseDate=system.today();
+opplist2udate.add(opp);
+
+}
+}
+    }
+if(!opplist2udate.isEmpty())
+{
+update opplist2udate;
+}
+    }
+
+}
